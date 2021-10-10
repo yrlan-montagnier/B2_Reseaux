@@ -212,7 +212,7 @@ rtt min/avg/max/mdev = 20.935/23.279/25.624/2.349 ms
     [yrlan@dhcp ~]$ sudo systemctl start dhcpd; sudo systemctl enable dhcpd
     Created symlink /etc/systemd/system/multi-user.target.wants/dhcpd.service → /usr/lib/systemd/system/dhcpd.service.
     ```
-> **📁 [Fichier de conf du serveur DHCP : `dhcpd.conf`](/conf/dhcpd.conf)**
+> **📁 [Fichier de conf du serveur DHCP : `dhcpd.conf`](./conf/dhcpd.conf)**
 
 > **Le `option domain-name-servers` dans le fichier au dessus est `10.3.0.253` qui est l'IP de mon serveur DNS ( modifié après pendant le TP pour donner automatiquement le DNS)**
 
@@ -1064,15 +1064,15 @@ IP4.DNS[1]:                             10.3.0.253
 - **NFS** => Par défaut, Port `2049/TCP` mais peut utiliser `2049/UDP` 
 
 - **📁 Captures réseau**
-	- **[`tp3_ssh.pcap`](/Capture/tp3_ssh.pcap)**
-	- **[`tp3_http.pcap`](/Capture/tp3_http.pcap)**
-	- **[`tp3_dns.pcap`](/Capture/tp3_dns.pcap)**
-	- **[`tp3_nfs.pcap`](/Capture/tp3_nfs.pcap)**
+	- **[`tp3_ssh.pcap`](./Capture/tp3_ssh.pcap)**
+	- **[`tp3_http.pcap`](./Capture/tp3_http.pcap)**
+	- **[`tp3_dns.pcap`](./Capture/tp3_dns.pcap)**
+	- **[`tp3_nfs.pcap`](./Capture/tp3_nfs.pcap)**
 
 #### **🌞 Capturez et mettez en évidence un 3-way handshake**
 
 - **📁 Capture réseau**
-    - **[`tp3_3way.pcap`](/Capture/tp3_3way.pcap)**
+    - **[`tp3_3way.pcap`](./Capture/tp3_3way.pcap)**
 
 # **V. El final**
 
@@ -1134,11 +1134,11 @@ IP4.DNS[1]:                             10.3.0.253
 #### **🌞 Et j'veux des fichiers aussi, tous les fichiers de conf du DNS**
 
 - **📁 Fichiers de zone**
-	- [client1.tp3.forward](/conf/client1.tp3.forward)
-	- [server1.tp3.forward](/conf/server1.tp3.forward)
-	- [server2.tp3.forward](/conf/server2.tp3.forward)
+	- [client1.tp3.forward](./conf/client1.tp3.forward)
+	- [server1.tp3.forward](./conf/server1.tp3.forward)
+	- [server2.tp3.forward](./conf/server2.tp3.forward)
 
 - **📁 Fichier de conf principal DNS named.conf**
-    - [named.conf](/conf/named.conf)
+    - [named.conf](./conf/named.conf)
 
 - **Faites ça à peu près propre dans le rendu, que j'ai plus qu'à cliquer pour arriver sur le fichier ce serait top** :+1: 
