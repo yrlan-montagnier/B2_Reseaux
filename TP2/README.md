@@ -101,7 +101,7 @@ sucess
 Serving HTTP on 0.0.0.0 port 8888 (http://0.0.0.0:8888/) ...
 ```
 > On récupère la capture dans le navigateur à l'adresse http://10.2.1.11:8888/
-[tp2_arp.pcap](/Capture/tp2_arp.pcap)
+[tp2_arp.pcap](./Capture/tp2_arp.pcap)
 
 > Pour la suite du TP, j'ai utilisé FileZilla pour récuperer mes captures en SSH
 
@@ -265,7 +265,7 @@ public (active)
 | 7     | Pong        | 10.2.2.12 | `marcel` `08:00:27:7a:ca:f3` | 10.2.2.254     | `router` `08:00:27:2b:87:ef`|
 | 8     | Pong        | 10.2.2.12 | `router` `08:00:27:9d:1e:26` | 10.2.1.11      | `node1` `08:00:27:72:b7:a3` |
 
-[tp2_routage_fusion.pcap](/Capture/tp2_routage_fusion.pcap)
+[tp2_routage_fusion.pcap](./Capture/tp2_routage_fusion.pcap)
 
 ### 3. Accès internet
 #### **🌞Donnez un accès internet à vos machines**
@@ -358,7 +358,7 @@ public (active)
     ```
 - **Capturez le ping depuis node1.net1.tp2 avec tcpdump : `sudo tcpdump -i enp0s8 -w tp2_routage_internet.pcap not port 22`**
 
-[tp2_routage_internet.pcap](/Capture/tp2_routage_internet.pcap)
+[tp2_routage_internet.pcap](./Capture/tp2_routage_internet.pcap)
 - **Analysez un ping aller et le retour qui correspond et mettez dans un tableau :**
 
 | ordre | type trame | IP source           | MAC source                  | IP destination      | MAC destination              | 
@@ -537,11 +537,11 @@ public (active)
     ```
 - **Exportez le fichier `.pcap`**
 
-[tp2_dhcp.pcap](/Capture/tp2_dhcp.pcap)
+[tp2_dhcp.pcap](./Capture/tp2_dhcp.pcap)
 
 - **Mettez en évidence l'échange DHCP DORA (Discover, Offer, Request, Acknowledge)**
 
-[](/img/dhcp.png)
+![](./img/dhcp.png)
 
 - **Ecrivez, dans l'ordre, les échanges ARP + DHCP qui ont lieu, je veux TOUTES les trames utiles pour l'échange**
 
