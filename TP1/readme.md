@@ -311,7 +311,7 @@ reponse
 ### 1. DHCP
 #### **🌞 Exploration du DHCP, depuis votre PC**
 Pour obtenir les informations sur le serveur DHCP, panneau de configuration => réseau => carte réseau => propriété ou `ipconfig /all`
-![](/img/DHCP.png)
+![](./img/DHCP.png)
 
 L'adresse IP du serveur DHCP d'Ynov est 10.33.3.254, et le bail DHCP expirera à 17:02.
 
@@ -373,7 +373,7 @@ Ce que l'on peut en déduire, c'est qu'il est également possible de retrouver u
 Pour cette partie, il faut préciser que je n'étais plus aux locaux d'ynov, j'ai donc fait la partie sur Wireshark avec une VM configurée avec une carte bridge, qui possède une IP sur le même réseau physique que mon laptop.
 
 #### Un ping entre vous et la passerelle
-[](/img/Ping.png)
+![](./img/Ping.png)
 
 #### Un netcat entre vous et votre mate, branché en RJ45
 ```
@@ -387,7 +387,7 @@ Test
 Message depuis linux
 Reponse sur powershell
 ```
-[](/img/Netcat.wireshark.png)
+![](./img/Netcat.wireshark.png)
 
 #### Une requête DNS. Identifiez dans la capture le serveur DNS à qui vous posez la question.
 [](/img/DNS.png)
