@@ -39,9 +39,9 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
 ## 3. Setup topologie 1
 
 #### **🌞 Commençons simple**
-
 - **Définissez les IPs statiques sur les deux VPCS**
     ```
+    # On définit les addresses IP
     PC1> ip 10.1.1.1/24
     Checking for duplicate address...
     PC1 : 10.1.1.1 255.255.255.0
@@ -50,6 +50,7 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     Checking for duplicate address...
     PC2 : 10.1.1.2 255.255.255.0
 
+    # Vérification
     PC1> show ip
 
     NAME        : PC1[1]
@@ -60,19 +61,7 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     LPORT       : 20006
     RHOST:PORT  : 127.0.0.1:20007
     MTU         : 1500
-    ----------------------------------------------------
-    PC2> show ip
-
-    NAME        : PC2[1]
-    IP/MASK     : 10.1.1.2/24
-    GATEWAY     : 0.0.0.0
-    DNS         :
-    MAC         : 00:50:79:66:68:01
-    LPORT       : 20042
-    RHOST:PORT  : 127.0.0.1:20043
-    MTU         : 1500
     ```
-
 - `ping` un VPCS depuis l'autre
     ```
     PC1> ping 10.1.1.2 -c 3
@@ -80,25 +69,16 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     84 bytes from 10.1.1.2 icmp_seq=1 ttl=64 time=5.545 ms
     84 bytes from 10.1.1.2 icmp_seq=2 ttl=64 time=8.601 ms
     84 bytes from 10.1.1.2 icmp_seq=3 ttl=64 time=6.452 ms
+    -------------------------------------------------------
+    PC2> ping 10.1.1.1 -c 2
+
+    84 bytes from 10.1.1.1 icmp_seq=1 ttl=64 time=11.604 ms
+    84 bytes from 10.1.1.1 icmp_seq=2 ttl=64 time=10.701 ms
     ```
 
 > Jusque là, ça devrait aller. Noter qu'on a fait aucune conf sur le switch. Tant qu'on ne fait rien, c'est une bête multiprise.
 
 # II. VLAN
-
-**Le but dans cette partie va être de tester un peu les *VLANs*.**
-
-On va rajouter **un troisième client** qui, bien que dans le même réseau, sera **isolé des autres grâce aux *VLANs***.
-
-**Les *VLANs* sont une configuration à effectuer sur les *switches*.** C'est les *switches* qui effectuent le blocage.
-
-Le principe est simple :
-
-- déclaration du VLAN sur tous les switches
-  - un VLAN a forcément un ID (un entier)
-  - bonne pratique, on lui met un nom
-- sur chaque switch, on définit le VLAN associé à chaque port
-  - genre "sur le port 35, c'est un client du VLAN 20 qui est branché"
 
 ## 1. Topologie 2
 
@@ -114,31 +94,116 @@ Le principe est simple :
 
 ### 3. Setup topologie 2
 
-🌞 **Adressage**
+#### **🌞 Adressage**
 
-- définissez les IPs statiques sur tous les VPCS
-- vérifiez avec des `ping` que tout le monde se ping
+- **Définissez les IPs statiques sur tous les VPCS**
+    ```
+    PC3> ip 10.1.1.3/24
+    ```
+- **Vérifiez avec des `ping` que tout le monde se ping**
+    ```
+    PC2> ping 10.1.1.3 -c 4
 
-🌞 **Configuration des VLANs**
+    84 bytes from 10.1.1.3 icmp_seq=1 ttl=64 time=8.053 ms
+    84 bytes from 10.1.1.3 icmp_seq=2 ttl=64 time=5.151 ms
+    84 bytes from 10.1.1.3 icmp_seq=3 ttl=64 time=6.817 ms
+    84 bytes from 10.1.1.3 icmp_seq=4 ttl=64 time=2.377 ms
+    --------------------------------------------------------
+    PC3> ping 10.1.1.1 -c 4
 
-- référez-vous [à la section VLAN du mémo Cisco](../../cours/memo/memo_cisco.md#8-vlan)
-- déclaration des VLANs sur le switch `sw1`
-- ajout des ports du switches dans le bon VLAN (voir [le tableau d'adressage de la topo 2 juste au dessus](#2-adressage-topologie-2))
-  - ici, tous les ports sont en mode *access* : ils pointent vers des clients du réseau
+    84 bytes from 10.1.1.1 icmp_seq=1 ttl=64 time=7.373 ms
+    84 bytes from 10.1.1.1 icmp_seq=2 ttl=64 time=6.256 ms
+    84 bytes from 10.1.1.1 icmp_seq=3 ttl=64 time=20.608 ms
+    84 bytes from 10.1.1.1 icmp_seq=4 ttl=64 time=14.735 ms
+    ```
 
-🌞 **Vérif**
+#### **🌞 Configuration des VLANs**
 
-- `pc1` et `pc2` doivent toujours pouvoir se ping
-- `pc3` ne ping plus personne
+- **Référez-vous à la section VLAN du mémo Cisco**
+- **Déclaration des VLANs sur le switch `sw1`**
+    ```
+    # Passage en mode priviligié puis mode config
+    Switch>enable 
+    Switch#conf t
+    
+    # Création des 2 vlan + leurs nom
+    Switch(config)#vlan 10  
+    Switch(config-vlan)#name MyVlan
+    Switch(config-vlan)#exit
+    
+    Switch(config)#vlan 20
+    Switch(config-vlan)#name restrict
+    Switch(config-vlan)#exit
+    
+    # Vérifications
+    Switch(config)#do show vlan br
+    VLAN Name                             Status    Ports
+    ---- -------------------------------- --------- -------------------------------
+    [...]
+    10   MyVlan                           active    
+    20   restrict                         active    
+    [...]
+    ```
+- **Ajout des ports du switches dans le bon VLAN (voir [le tableau d'adressage de la topo 2 juste au dessus](#2-adressage-topologie-2))**
+    - **Ici, tous les ports sont en mode *access* : ils pointent vers des clients du réseau**
+    ```
+    # PC1 dans vlan10
+    Switch(config)#interface GigabitEthernet0/1
+    Switch(config-if)#switchport mode access
+    Switch(config-if)#switchport access vlan 10
+    Switch(config-if)#exit
+
+    # PC2 dans vlan10
+    Switch(config)#interface GigabitEthernet0/2
+    Switch(config-if)#switchport mode access
+    Switch(config-if)#switchport access vlan 10
+    Switch(config-if)#exit
+
+    # PC3 dans vlan20
+    Switch(config)#interface GigabitEthernet0/3
+    Switch(config-if)#switchport mode access
+    Switch(config-if)#switchport access vlan 20
+    Switch(config-if)#exit
+
+    # Vérifications
+    Switch(config)#do show vlan br
+    VLAN Name                             Status    Ports
+    ---- -------------------------------- --------- -------------------------------
+    [...]
+    10   MyVlan                           active    Gi0/1, Gi0/2
+    20   restrict                         active    Gi0/3
+    [...]
+    ```
+
+#### **🌞 Vérif**
+
+- **`pc1` et `pc2` doivent toujours pouvoir se ping**
+    ```
+    PC1> ping 10.1.1.2 -c 3
+
+    84 bytes from 10.1.1.2 icmp_seq=1 ttl=64 time=15.862 ms
+    84 bytes from 10.1.1.2 icmp_seq=2 ttl=64 time=4.685 ms
+    84 bytes from 10.1.1.2 icmp_seq=3 ttl=64 time=2.569 ms
+    ```
+- **`pc3` ne ping plus personne**
+    ```
+    PC3> ping 10.1.1.1
+
+    host (10.1.1.1) not reachable
+
+    PC3> ping 10.1.1.2
+
+    host (10.1.1.2) not reachable
+    ```
 
 # III. Routing
 
 Dans cette partie, on va donner un peu de sens aux VLANs :
 
-- un pour les serveurs du réseau
-  - on simulera ça avec un p'tit serveur web
-- un pour les admins du réseau
-- un pour les autres random clients du réseau
+- **Un pour les serveurs du réseau**
+  - **On simulera ça avec un p'tit serveur web**
+- **Un pour les admins du réseau**
+- **Un pour les autres random clients du réseau**
 
 Cela dit, il faut que tout ce beau monde puisse se ping, au moins joindre le réseau des serveurs, pour accéder au super site-web.
 
@@ -172,28 +237,113 @@ L'adresse des machines au sein de ces réseaux :
 
 ## 3. Setup topologie 3
 
-🖥️ VM `web1.servers.tp4`, déroulez la [Checklist VM Linux](#checklist-vm-linux) dessus
+> **🖥️ VM `web1.servers.tp4`, déroulez la [Checklist VM Linux](#checklist-vm-linux) dessus**
 
-🌞 **Adressage**
+#### **🌞 Adressage**
 
-- définissez les IPs statiques sur toutes les machines **sauf le *routeur***
+- **Définissez les IPs statiques sur toutes les machines sauf le *routeur***
+    ```
+    pc1> ip 10.1.1.1/24
+    Checking for duplicate address...
+    pc1 : 10.1.1.1 255.255.255.0
 
-🌞 **Configuration des VLANs**
+    pc2> ip 10.1.1.2/24
+    Checking for duplicate address...
+    pc2 : 10.1.1.2 255.255.255.0
 
-- référez-vous au [mémo Cisco](../../cours/memo/memo_cisco.md#8-vlan)
-- déclaration des VLANs sur le switch `sw1`
-- ajout des ports du switches dans le bon VLAN (voir [le tableau d'adressage de la topo 2 juste au dessus](#2-adressage-topologie-2))
-- il faudra ajouter le port qui pointe vers le *routeur* comme un *trunk* : c'est un port entre deux équipements réseau (un *switch* et un *routeur*)
+    adm1> ip 10.2.2.1/24
+    Checking for duplicate address...
+    adm1 : 10.2.2.1 255.255.255.0
+    ```
+
+#### **🌞 Configuration des VLANs**
+
+- **Référez-vous au [mémo Cisco](../../cours/memo/memo_cisco.md#8-vlan)**
+- **Déclaration des VLANs sur le switch `sw1`**
+    ```
+    Switch(config)#vlan 11
+    Switch(config-vlan)#name clients
+    Switch(config-vlan)#exit
+
+    Switch(config)#vlan 12
+    Switch(config-vlan)#name admins
+    Switch(config-vlan)#exit
+
+    Switch(config)#vlan 13
+    Switch(config-vlan)#name servers
+    Switch(config-vlan)#exit
+    ```
+- **Ajout des ports du switches dans le bon VLAN (voir [le tableau d'adressage de la topo 2 juste au dessus](#2-adressage-topologie-2))**
+    ```
+    # Port du pc1
+    Switch(config)#interface GigabitEthernet0/1
+    Switch(config-if)#switchport mode access
+    Switch(config-if)#switchport access vlan 11
+    Switch(config-if)#exit
+
+    # Port du pc2
+    Switch(config)#interface GigabitEthernet0/2
+    Switch(config-if)#switchport mode access
+    Switch(config-if)#switchport access vlan 11
+    Switch(config-if)#exit
+
+    # Port de adm1
+    Switch(config)#interface GigabitEthernet0/3
+    Switch(config-if)#switchport mode access
+    Switch(config-if)#switchport access vlan 12
+    Switch(config-if)#exit
+    
+    # Port de web1
+    Switch(config)#interface GigabitEthernet0/0
+    Switch(config-if)#switchport mode access
+    Switch(config-if)#switchport access vlan 13
+    Switch(config-if)#exit
+
+    # Vérifications
+    Switch(config)#do show vlan br
+
+    VLAN Name                             Status    Ports
+    ---- -------------------------------- --------- -------------------------------
+    [...]
+    11   clients                          active    Gi0/1, Gi0/2
+    12   admins                           active    Gi0/3
+    13   servers                          active    Gi0/0
+    [...]
+    ```
+- **Il faudra ajouter le port qui pointe vers le *routeur* comme un *trunk* : c'est un port entre deux équipements réseau (un *switch* et un *routeur*)**
+    ```cisco
+    # Port du routeur
+    Switch(config)#interface GigabitEthernet1/0
+    Switch(config-if)#switchport trunk encapsulation dot1q
+    Switch(config-if)#switchport mode trunk
+    Switch(config-if)#switchport trunk allowed vlan add 11,12,13
+    Switch(config-if)#exit
+
+    # Vérifications
+    Switch(config)#do show int trunk
+
+    Port        Mode             Encapsulation  Status        Native vlan
+    Gi1/0       on               802.1q         trunking      1
+
+    Port        Vlans allowed on trunk
+    Gi1/0       1-4094
+
+    Port        Vlans allowed and active in management domain
+    Gi1/0       1,11-13
+
+    Port        Vlans in spanning tree forwarding state and not pruned
+    Gi1/0       1,11-13
+    ```
 
 ---
 
 ➜ **Pour le *routeur***
 
-- référez-vous au [mémo Cisco](../../cours/memo/memo_cisco.md)
-- ici, on va avoir besoin d'un truc très courant pour un *routeur* : qu'il porte plusieurs IP sur une unique interface
-  - avec Cisco, on crée des "sous-interfaces" sur une interface
-  - et on attribue une IP à chacune de ces sous-interfaces
-- en plus de ça, il faudra l'informer que, pour chaque interface, elle doit être dans un VLAN spécifique
+- **Référez-vous au [mémo Cisco](../../cours/memo/memo_cisco.md)**
+- **Ici, on va avoir besoin d'un truc très courant pour un *routeur* : qu'il porte plusieurs IP sur une unique interface**
+  - Avec Cisco, on crée des "sous-interfaces" sur une interface
+  - Et on attribue une IP à chacune de ces sous-interfaces
+- **En plus de ça, il faudra l'informer que, pour chaque interface, elle doit être dans un VLAN spécifique**
 
 Pour ce faire, un exemple. On attribue deux IPs `192.168.1.254/24` VLAN 11 et `192.168.2.254` VLAN12 à un *routeur*. L'interface concernée sur le *routeur* est `fastEthernet 0/0` :
 
@@ -211,15 +361,15 @@ R1(config-subif)# ip addr 192.168.2.254 255.255.255.0
 R1(config-subif)# exit
 ```
 
-🌞 **Config du *routeur***
+#### **🌞 Config du *routeur***
 
-- attribuez ses IPs au *routeur*
+- **Attribuez ses IPs au *routeur***
   - 3 sous-interfaces, chacune avec son IP et un VLAN associé
 
-🌞 **Vérif**
+#### **🌞 Vérif**
 
-- tout le monde doit pouvoir ping le routeur sur l'IP qui est dans son réseau
-- en ajoutant une route vers les réseaux, ils peuvent se ping entre eux
+- **Tout le monde doit pouvoir ping le routeur sur l'IP qui est dans son réseau**
+- **En ajoutant une route vers les réseaux, ils peuvent se ping entre eux**
   - ajoutez une route par défaut sur les VPCS
   - ajoutez une route par défaut sur la machine virtuelle
   - testez des `ping` entre les réseaux
