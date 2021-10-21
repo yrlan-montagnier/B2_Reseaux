@@ -198,19 +198,6 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
 
 # III. Routing
 
-Dans cette partie, on va donner un peu de sens aux VLANs :
-
-- **Un pour les serveurs du réseau**
-  - **On simulera ça avec un p'tit serveur web**
-- **Un pour les admins du réseau**
-- **Un pour les autres random clients du réseau**
-
-Cela dit, il faut que tout ce beau monde puisse se ping, au moins joindre le réseau des serveurs, pour accéder au super site-web.
-
-**Bien que bloqué au niveau du switch à cause des VLANs, le trafic pourra passer d'un VLAN à l'autre grâce à un routeur.**
-
-Il assurera son job de routeur traditionnel : router entre deux réseaux. Sauf qu'en plus, il gérera le changement de VLAN à la volée.
-
 ## 1. Topologie 3
 
 ![Topologie 3](./img/topo3.png)
@@ -243,17 +230,25 @@ L'adresse des machines au sein de ces réseaux :
 
 - **Définissez les IPs statiques sur toutes les machines sauf le *routeur***
     ```
-    pc1> ip 10.1.1.1/24
+    pc1> ip 10.1.1.1/24 10.1.1.254
     Checking for duplicate address...
     pc1 : 10.1.1.1 255.255.255.0
 
-    pc2> ip 10.1.1.2/24
+    pc2> ip 10.1.1.2/24 10.1.1.254
     Checking for duplicate address...
     pc2 : 10.1.1.2 255.255.255.0
 
-    adm1> ip 10.2.2.1/24
+    adm1> ip 10.2.2.1/24 10.2.2.254
     Checking for duplicate address...
     adm1 : 10.2.2.1 255.255.255.0
+    
+    [yrlan@web1 ~]$ sudo cat /etc/sysconfig/network-scripts/ifcfg-enp0s3
+    [...]
+    BOOTPROTO=static
+    IPADDR=10.3.3.1
+    NETMASK=255.255.255.0
+    GATEWAY=
+    [...]
     ```
 
 #### **🌞 Configuration des VLANs**
@@ -275,6 +270,12 @@ L'adresse des machines au sein de ces réseaux :
     ```
 - **Ajout des ports du switches dans le bon VLAN (voir [le tableau d'adressage de la topo 2 juste au dessus](#2-adressage-topologie-2))**
     ```
+    # Port de web1
+    Switch(config)#interface GigabitEthernet0/0
+    Switch(config-if)#switchport mode access
+    Switch(config-if)#switchport access vlan 13
+    Switch(config-if)#exit
+    
     # Port du pc1
     Switch(config)#interface GigabitEthernet0/1
     Switch(config-if)#switchport mode access
@@ -293,12 +294,6 @@ L'adresse des machines au sein de ces réseaux :
     Switch(config-if)#switchport access vlan 12
     Switch(config-if)#exit
     
-    # Port de web1
-    Switch(config)#interface GigabitEthernet0/0
-    Switch(config-if)#switchport mode access
-    Switch(config-if)#switchport access vlan 13
-    Switch(config-if)#exit
-
     # Vérifications
     Switch(config)#do show vlan br
 
@@ -311,7 +306,7 @@ L'adresse des machines au sein de ces réseaux :
     [...]
     ```
 - **Il faudra ajouter le port qui pointe vers le *routeur* comme un *trunk* : c'est un port entre deux équipements réseau (un *switch* et un *routeur*)**
-    ```cisco
+    ```
     # Port du routeur
     Switch(config)#interface GigabitEthernet1/0
     Switch(config-if)#switchport trunk encapsulation dot1q
@@ -339,40 +334,90 @@ L'adresse des machines au sein de ces réseaux :
 
 ➜ **Pour le *routeur***
 
-- **Référez-vous au [mémo Cisco](../../cours/memo/memo_cisco.md)**
-- **Ici, on va avoir besoin d'un truc très courant pour un *routeur* : qu'il porte plusieurs IP sur une unique interface**
-  - Avec Cisco, on crée des "sous-interfaces" sur une interface
-  - Et on attribue une IP à chacune de ces sous-interfaces
-- **En plus de ça, il faudra l'informer que, pour chaque interface, elle doit être dans un VLAN spécifique**
-
-Pour ce faire, un exemple. On attribue deux IPs `192.168.1.254/24` VLAN 11 et `192.168.2.254` VLAN12 à un *routeur*. L'interface concernée sur le *routeur* est `fastEthernet 0/0` :
-
-```cisco
-# conf t
-
-(config)# interface fastEthernet 0/0.10
-R1(config-subif)# encapsulation dot1Q 10
-R1(config-subif)# ip addr 192.168.1.254 255.255.255.0 
-R1(config-subif)# exit
-
-(config)# interface fastEthernet 0/0.20
-R1(config-subif)# encapsulation dot1Q 20
-R1(config-subif)# ip addr 192.168.2.254 255.255.255.0 
-R1(config-subif)# exit
-```
-
 #### **🌞 Config du *routeur***
 
 - **Attribuez ses IPs au *routeur***
-  - 3 sous-interfaces, chacune avec son IP et un VLAN associé
+    - 3 sous-interfaces, chacune avec son IP et un VLAN associé
+    ```
+    # conf t
+
+    R1(config)# interface fastEthernet 0/0.11
+    R1(config-subif)# encapsulation dot1Q 11
+    R1(config-subif)# ip addr 10.1.1.254 255.255.255.0 
+    R1(config-subif)# exit
+
+    (config)# interface fastEthernet 0/0.12
+    R1(config-subif)# encapsulation dot1Q 12
+    R1(config-subif)# ip addr 10.2.2.254 255.255.255.0 
+    R1(config-subif)# exit
+
+    (config)# interface fastEthernet 0/0.13
+    R1(config-subif)# encapsulation dot1Q 13
+    R1(config-subif)# ip addr 10.3.3.254 255.255.255.0 
+    R1(config-subif)# exit
+
+    # Allumer l'interface réseau
+    R1(config)#interface FastEthernet0/0
+    R1(config-if)#no shut
+    ```
 
 #### **🌞 Vérif**
 
 - **Tout le monde doit pouvoir ping le routeur sur l'IP qui est dans son réseau**
+    ```
+    pc1> ping 10.1.1.254 -c 3
+
+    84 bytes from 10.1.1.254 icmp_seq=1 ttl=255 time=30.358 ms
+    84 bytes from 10.1.1.254 icmp_seq=2 ttl=255 time=23.413 ms
+    84 bytes from 10.1.1.254 icmp_seq=3 ttl=255 time=21.267 ms
+    ------------------------------------------------------------
+    adm1> ping 10.2.2.254 -c 2
+
+    84 bytes from 10.2.2.254 icmp_seq=1 ttl=255 time=5.938 ms
+    84 bytes from 10.2.2.254 icmp_seq=2 ttl=255 time=15.768 ms
+
+    ```
 - **En ajoutant une route vers les réseaux, ils peuvent se ping entre eux**
-  - ajoutez une route par défaut sur les VPCS
-  - ajoutez une route par défaut sur la machine virtuelle
-  - testez des `ping` entre les réseaux
+    - ajoutez une route par défaut sur les VPCS
+    ```
+    pc1> ip 10.1.1.1/24 10.1.1.254
+    Checking for duplicate address...
+    pc1 : 10.1.1.1 255.255.255.0 gateway 10.1.1.254
+
+    pc2> ip 10.1.1.2/24 10.1.1.254
+    Checking for duplicate address...
+    pc1 : 10.1.1.2 255.255.255.0 gateway 10.1.1.254
+
+    adm1> ip 10.2.2.1/24 10.2.2.254
+    Checking for duplicate address...
+    adm1 : 10.2.2.1 255.255.255.0 gateway 10.2.2.254
+    ```
+	- ajoutez une route par défaut sur la machine virtuelle
+    ```
+    [yrlan@web1 ~]$ sudo cat /etc/sysconfig/network-scripts/ifcfg-enp0s3 | grep GATEWAY
+    GATEWAY=10.3.3.254
+    ```
+	- testez des `ping` entre les réseaux
+    ```
+    pc1> ping 10.3.3.1 -c 2
+
+    84 bytes from 10.3.3.1 icmp_seq=1 ttl=63 time=35.981 ms
+    84 bytes from 10.3.3.1 icmp_seq=2 ttl=63 time=36.401 ms
+
+    adm1> ping 10.1.1.2 -c 2
+
+    84 bytes from 10.1.1.2 icmp_seq=1 ttl=63 time=56.236 ms
+    84 bytes from 10.1.1.2 icmp_seq=2 ttl=63 time=31.534 ms
+
+    [yrlan@web1 ~]$ ping 10.2.2.1 -c 2
+    PING 10.2.2.1 (10.2.2.1) 56(84) bytes of data.
+    64 bytes from 10.2.2.1: icmp_seq=1 ttl=63 time=62.10 ms
+    64 bytes from 10.2.2.1: icmp_seq=2 ttl=63 time=43.0 ms
+
+    --- 10.2.2.1 ping statistics ---
+    2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+    rtt min/avg/max/mdev = 43.020/52.985/62.950/9.965 ms
+    ```
 
 # IV. NAT
 
