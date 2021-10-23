@@ -230,15 +230,15 @@ L'adresse des machines au sein de ces réseaux :
 
 - **Définissez les IPs statiques sur toutes les machines sauf le *routeur***
     ```
-    pc1> ip 10.1.1.1/24 10.1.1.254
+    pc1> ip 10.1.1.1/24
     Checking for duplicate address...
     pc1 : 10.1.1.1 255.255.255.0
 
-    pc2> ip 10.1.1.2/24 10.1.1.254
+    pc2> ip 10.1.1.2/24
     Checking for duplicate address...
     pc2 : 10.1.1.2 255.255.255.0
 
-    adm1> ip 10.2.2.1/24 10.2.2.254
+    adm1> ip 10.2.2.1/24
     Checking for duplicate address...
     adm1 : 10.2.2.1 255.255.255.0
     
@@ -247,7 +247,6 @@ L'adresse des machines au sein de ces réseaux :
     BOOTPROTO=static
     IPADDR=10.3.3.1
     NETMASK=255.255.255.0
-    GATEWAY=
     [...]
     ```
 
@@ -314,8 +313,8 @@ L'adresse des machines au sein de ces réseaux :
     Switch(config-if)#switchport trunk allowed vlan add 11,12,13
     Switch(config-if)#exit
 
-    # Vérifications
-    Switch(config)#do show int trunk
+    # Vérifications + Sauvegarde config
+    Switch(config)#do show int tr
 
     Port        Mode             Encapsulation  Status        Native vlan
     Gi1/0       on               802.1q         trunking      1
@@ -328,8 +327,15 @@ L'adresse des machines au sein de ces réseaux :
 
     Port        Vlans in spanning tree forwarding state and not pruned
     Gi1/0       1,11-13
+    
+    Switch#copy running-config startup-config
+    Destination filename [startup-config]?
+    Building configuration...
+    Compressed configuration from 3839 bytes to 1721 bytes[OK]
+    Switch#
+    *Oct 23 17:01:24.271: %GRUB-5-CONFIG_WRITING: GRUB configuration is being updated on disk. Please wait...
+    *Oct 23 17:01:25.340: %GRUB-5-CONFIG_WRITTEN: GRUB configuration was written to disk successfully.
     ```
-
 ---
 
 ➜ **Pour le *routeur***
@@ -339,46 +345,65 @@ L'adresse des machines au sein de ces réseaux :
 - **Attribuez ses IPs au *routeur***
     - 3 sous-interfaces, chacune avec son IP et un VLAN associé
     ```
-    # conf t
+    R1#conf t
 
-    R1(config)# interface fastEthernet 0/0.11
-    R1(config-subif)# encapsulation dot1Q 11
-    R1(config-subif)# ip addr 10.1.1.254 255.255.255.0 
-    R1(config-subif)# exit
+    R1(config)#interface fastEthernet 0/0.11
+    R1(config-subif)#encapsulation dot1Q 11
+    R1(config-subif)#ip addr 10.1.1.254 255.255.255.0 
+    R1(config-subif)#exit
 
-    (config)# interface fastEthernet 0/0.12
-    R1(config-subif)# encapsulation dot1Q 12
-    R1(config-subif)# ip addr 10.2.2.254 255.255.255.0 
-    R1(config-subif)# exit
+    (config)#interface fastEthernet 0/0.12
+    R1(config-subif)#encapsulation dot1Q 12
+    R1(config-subif)#ip addr 10.2.2.254 255.255.255.0 
+    R1(config-subif)#exit
 
-    (config)# interface fastEthernet 0/0.13
-    R1(config-subif)# encapsulation dot1Q 13
-    R1(config-subif)# ip addr 10.3.3.254 255.255.255.0 
-    R1(config-subif)# exit
+    (config)#interface fastEthernet 0/0.13
+    R1(config-subif)#encapsulation dot1Q 13
+    R1(config-subif)#ip addr 10.3.3.254 255.255.255.0 
+    R1(config-subif)#exit
 
     # Allumer l'interface réseau
     R1(config)#interface FastEthernet0/0
     R1(config-if)#no shut
+    R1(config-if)#exit
+    
+    # Vérifications + sauvegarde config
+    R1(config)#do show ip int br
+    Interface                  IP-Address      OK? Method Status                Protocol
+    FastEthernet0/0            unassigned      YES NVRAM  up                    up
+    FastEthernet0/0.11         10.1.1.254      YES NVRAM  up                    up
+    FastEthernet0/0.12         10.2.2.254      YES NVRAM  up                    up
+    FastEthernet0/0.13         10.3.3.254      YES NVRAM  up                    up
+    
+    R1(config)#do copy running-config startup-config
     ```
 
 #### **🌞 Vérif**
 
 - **Tout le monde doit pouvoir ping le routeur sur l'IP qui est dans son réseau**
     ```
-    pc1> ping 10.1.1.254 -c 3
+    pc1> ping 10.1.1.254 -c 2
 
     84 bytes from 10.1.1.254 icmp_seq=1 ttl=255 time=30.358 ms
     84 bytes from 10.1.1.254 icmp_seq=2 ttl=255 time=23.413 ms
-    84 bytes from 10.1.1.254 icmp_seq=3 ttl=255 time=21.267 ms
     ------------------------------------------------------------
     adm1> ping 10.2.2.254 -c 2
 
     84 bytes from 10.2.2.254 icmp_seq=1 ttl=255 time=5.938 ms
     84 bytes from 10.2.2.254 icmp_seq=2 ttl=255 time=15.768 ms
+    ------------------------------------------------------------
+  [yrlan@web1 ~]$ ping 10.3.3.254 -c 3
+    PING 10.3.3.254 (10.3.3.254) 56(84) bytes of data.
+    64 bytes from 10.3.3.254: icmp_seq=1 ttl=255 time=44.2 ms
+    64 bytes from 10.3.3.254: icmp_seq=2 ttl=255 time=22.0 ms
+    64 bytes from 10.3.3.254: icmp_seq=3 ttl=255 time=15.1 ms
 
+    --- 10.3.3.254 ping statistics ---
+    3 packets transmitted, 3 received, 0% packet loss, time 2003ms
+    rtt min/avg/max/mdev = 15.146/27.114/44.166/12.380 ms  
     ```
 - **En ajoutant une route vers les réseaux, ils peuvent se ping entre eux**
-    - ajoutez une route par défaut sur les VPCS
+    - **Ajoutez une route par défaut sur les VPCS**
     ```
     pc1> ip 10.1.1.1/24 10.1.1.254
     Checking for duplicate address...
@@ -391,32 +416,43 @@ L'adresse des machines au sein de ces réseaux :
     adm1> ip 10.2.2.1/24 10.2.2.254
     Checking for duplicate address...
     adm1 : 10.2.2.1 255.255.255.0 gateway 10.2.2.254
+    
+    # Sur tous VPC's pour save la config :
+    VPC's> wr
+    Saving startup configuration to startup.vpc
+    .  done
     ```
-	- ajoutez une route par défaut sur la machine virtuelle
+	- **Ajoutez une route par défaut sur la machine virtuelle**
     ```
     [yrlan@web1 ~]$ sudo cat /etc/sysconfig/network-scripts/ifcfg-enp0s3 | grep GATEWAY
     GATEWAY=10.3.3.254
+    [yrlan@web1 ~]$ ip r s | grep default
+    default via 10.3.3.254 dev enp0s3 proto static metric 100
     ```
-	- testez des `ping` entre les réseaux
+	- **Testez des `ping` entre les réseaux**
+
+    > **La 1ère fois, il y'a eut un timeout pour le 1er ping, car la machine fais un ARP broadcast pour connaitre la mac de destination, souvent, le temps qu'elle obtienne la réponse est trop long donc le 1er ping affiche un timeout**
     ```
-    pc1> ping 10.3.3.1 -c 2
+    pc1> ping 10.2.2.1 -c 3
 
-    84 bytes from 10.3.3.1 icmp_seq=1 ttl=63 time=35.981 ms
-    84 bytes from 10.3.3.1 icmp_seq=2 ttl=63 time=36.401 ms
+    10.2.2.1 icmp_seq=1 timeout
+    84 bytes from 10.3.3.1 icmp_seq=2 ttl=63 time=35.981 ms
+    84 bytes from 10.3.3.1 icmp_seq=3 ttl=63 time=36.401 ms
+    -------------------------------------------------------
+    adm1> ping 10.3.3.1 -c 3
 
-    adm1> ping 10.1.1.2 -c 2
+    10.3.3.1 icmp_seq=1 timeout
+    84 bytes from 10.3.3.1 icmp_seq=2 ttl=63 time=48.270 ms
+    84 bytes from 10.3.3.1 icmp_seq=3 ttl=63 time=26.424 ms
+    -------------------------------------------------------
+    [yrlan@web1 ~]$ ping 10.1.1.2 -c 3
+    PING 10.1.1.2 (10.1.1.2) 56(84) bytes of data.
+    64 bytes from 10.1.1.2: icmp_seq=2 ttl=63 time=35.8 ms
+    64 bytes from 10.1.1.2: icmp_seq=3 ttl=63 time=37.0 ms
 
-    84 bytes from 10.1.1.2 icmp_seq=1 ttl=63 time=56.236 ms
-    84 bytes from 10.1.1.2 icmp_seq=2 ttl=63 time=31.534 ms
-
-    [yrlan@web1 ~]$ ping 10.2.2.1 -c 2
-    PING 10.2.2.1 (10.2.2.1) 56(84) bytes of data.
-    64 bytes from 10.2.2.1: icmp_seq=1 ttl=63 time=62.10 ms
-    64 bytes from 10.2.2.1: icmp_seq=2 ttl=63 time=43.0 ms
-
-    --- 10.2.2.1 ping statistics ---
-    2 packets transmitted, 2 received, 0% packet loss, time 1001ms
-    rtt min/avg/max/mdev = 43.020/52.985/62.950/9.965 ms
+    --- 10.1.1.2 ping statistics ---
+    3 packets transmitted, 2 received, 33.3333% packet loss, time 2006ms
+    rtt min/avg/max/mdev = 35.828/36.415/37.003/0.617 ms
     ```
 
 # IV. NAT
@@ -425,11 +461,9 @@ On va ajouter une fonctionnalité au routeur : le NAT.
 
 On va le connecter à internet (simulation du fait d'avoir une IP publique) et il va faire du NAT pour permettre à toutes les machines du réseau d'avoir un accès internet.
 
-![Yellow cable](./img/yellow-cable.png)
-
 ## 1. Topologie 4
 
-![Topologie 3](./img/topo4.png)
+![Topologie 4](./img/topo4.png)
 
 ## 2. Adressage topologie 4
 
@@ -472,5 +506,3 @@ L'adresse des machines au sein de ces réseaux :
   - sur les VPCS
   - sur la machine Linux
 - vérifiez un `ping` vers un nom de domaine
-
-![i know cisco](./img/i_know.jpeg)
