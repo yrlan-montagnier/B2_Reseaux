@@ -22,6 +22,12 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
   - [1. Topologie 4](#1-topologie-4)
   - [2. Adressage topologie 4](#2-adressage-topologie-4)
   - [3. Setup topologie 4](#3-setup-topologie-4)
+- [V. Add a building](#v-add-a-building)
+  - [1. Topologie 5](#1-topologie-5)
+  - [2. Adressage topologie 4](#2-adressage-topologie-5)
+  - [3. Setup topologie 5](#3-setup-topologie-5)
+
+
 
 # I. Dumb switch
 
@@ -42,15 +48,17 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
 - **Définissez les IPs statiques sur les deux VPCS**
     ```
     # On définit les addresses IP
+    
     PC1> ip 10.1.1.1/24
     Checking for duplicate address...
     PC1 : 10.1.1.1 255.255.255.0
-
+    
     PC2> ip 10.1.1.2/24
     Checking for duplicate address...
     PC2 : 10.1.1.2 255.255.255.0
-
-    # Vérification
+    ----------------------------------
+    # Vérifications
+    
     PC1> show ip
 
     NAME        : PC1[1]
@@ -98,23 +106,38 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
 
 - **Définissez les IPs statiques sur tous les VPCS**
     ```
+    # On définit les addresses IP
+    PC1> ip 10.1.1.1/24
+    Checking for duplicate address...
+    PC1 : 10.1.1.1 255.255.255.0
+    ---------------------------------
+    PC2> ip 10.1.1.2/24
+    Checking for duplicate address...
+    PC2 : 10.1.1.2 255.255.255.0
+    ---------------------------------    
     PC3> ip 10.1.1.3/24
+    Checking for duplicate address...
+    PC2 : 10.1.1.3 255.255.255.0
     ```
 - **Vérifiez avec des `ping` que tout le monde se ping**
     ```
-    PC2> ping 10.1.1.3 -c 4
+    PC1> ping 10.1.1.2 -c 3
+
+    84 bytes from 10.1.1.2 icmp_seq=1 ttl=64 time=7.543 ms
+    84 bytes from 10.1.1.2 icmp_seq=2 ttl=64 time=7.532 ms
+    84 bytes from 10.1.1.2 icmp_seq=3 ttl=64 time=6.045 ms
+    --------------------------------------------------------
+    PC2> ping 10.1.1.3 -c 3
 
     84 bytes from 10.1.1.3 icmp_seq=1 ttl=64 time=8.053 ms
     84 bytes from 10.1.1.3 icmp_seq=2 ttl=64 time=5.151 ms
     84 bytes from 10.1.1.3 icmp_seq=3 ttl=64 time=6.817 ms
-    84 bytes from 10.1.1.3 icmp_seq=4 ttl=64 time=2.377 ms
     --------------------------------------------------------
-    PC3> ping 10.1.1.1 -c 4
+    PC3> ping 10.1.1.1 -c 3
 
     84 bytes from 10.1.1.1 icmp_seq=1 ttl=64 time=7.373 ms
     84 bytes from 10.1.1.1 icmp_seq=2 ttl=64 time=6.256 ms
     84 bytes from 10.1.1.1 icmp_seq=3 ttl=64 time=20.608 ms
-    84 bytes from 10.1.1.1 icmp_seq=4 ttl=64 time=14.735 ms
     ```
 
 #### **🌞 Configuration des VLANs**
@@ -125,18 +148,19 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     # Passage en mode priviligié puis mode config
     Switch>enable 
     Switch#conf t
-    
+    ---------------------------------------------
     # Création des 2 vlan + leurs nom
     Switch(config)#vlan 10  
     Switch(config-vlan)#name MyVlan
     Switch(config-vlan)#exit
-    
+    ----------------------------------
     Switch(config)#vlan 20
     Switch(config-vlan)#name restrict
     Switch(config-vlan)#exit
-    
+    ---------------------------------------------
     # Vérifications
     Switch(config)#do show vlan br
+    
     VLAN Name                             Status    Ports
     ---- -------------------------------- --------- -------------------------------
     [...]
@@ -152,20 +176,21 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     Switch(config-if)#switchport mode access
     Switch(config-if)#switchport access vlan 10
     Switch(config-if)#exit
-
+    --------------------------------------------
     # PC2 dans vlan10
     Switch(config)#interface GigabitEthernet0/2
     Switch(config-if)#switchport mode access
     Switch(config-if)#switchport access vlan 10
     Switch(config-if)#exit
-
+    --------------------------------------------
     # PC3 dans vlan20
     Switch(config)#interface GigabitEthernet0/3
     Switch(config-if)#switchport mode access
     Switch(config-if)#switchport access vlan 20
     Switch(config-if)#exit
-
+    --------------------------------------------
     # Vérifications
+    
     Switch(config)#do show vlan br
     VLAN Name                             Status    Ports
     ---- -------------------------------- --------- -------------------------------
@@ -190,12 +215,12 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     PC3> ping 10.1.1.1
 
     host (10.1.1.1) not reachable
-
+    -----------------------------
     PC3> ping 10.1.1.2
 
     host (10.1.1.2) not reachable
     ```
-
+    
 # III. Routing
 
 ## 1. Topologie 3
@@ -233,15 +258,15 @@ L'adresse des machines au sein de ces réseaux :
     pc1> ip 10.1.1.1/24
     Checking for duplicate address...
     pc1 : 10.1.1.1 255.255.255.0
-
+    ---------------------------------
     pc2> ip 10.1.1.2/24
     Checking for duplicate address...
     pc2 : 10.1.1.2 255.255.255.0
-
+    ---------------------------------
     adm1> ip 10.2.2.1/24
     Checking for duplicate address...
     adm1 : 10.2.2.1 255.255.255.0
-    
+    ---------------------------------
     [yrlan@web1 ~]$ sudo cat /etc/sysconfig/network-scripts/ifcfg-enp0s3
     [...]
     BOOTPROTO=static
@@ -252,7 +277,7 @@ L'adresse des machines au sein de ces réseaux :
 
 #### **🌞 Configuration des VLANs**
 
-- **Référez-vous au [mémo Cisco](../../cours/memo/memo_cisco.md#8-vlan)**
+- **Référez-vous au mémo Cisco**
 - **Déclaration des VLANs sur le switch `sw1`**
     ```
     Switch(config)#vlan 11
@@ -487,22 +512,237 @@ L'adresse des machines au sein de ces réseaux :
 
 ## 3. Setup topologie 4
 
-🌞 **Ajoutez le noeud Cloud à la topo**
+#### **🌞 Ajoutez le noeud Cloud à la topo**
 
-- branchez à `eth1` côté Cloud
-- côté routeur, il faudra récupérer un IP en DHCP (voir [le mémo Cisco](../../cours/memo/memo_cisco.md))
-- vous devriez pouvoir `ping 1.1.1.1`
+- **Branchez à `eth1` côté Cloud**
+- **Côté routeur, il faudra récupérer une IP en DHCP**
+    ```
+    R1#conf t
+    -------------------------------------
+    R1(config)#interface FastEthernet1/0
+    R1(config-if)#ip address dhcp
+    R1(config-if)#no shut
+    R1(config-if)#exit
+    -------------------------------------
+    # Vérifications
+    R1(config)#do show ip int br
+    
+    Interface                  IP-Address      OK? Method Status                Protocol
+    [...]
+    FastEthernet1/0            10.0.3.16       YES DHCP   up                    up
+    [....]
+    ```
+- **Vous devriez pouvoir `ping 1.1.1.1`**
+    ```
+    R1#ping 1.1.1.1
 
-🌞 **Configurez le NAT**
+    Type escape sequence to abort.
+    Sending 5, 100-byte ICMP Echos to 1.1.1.1, timeout is 2 seconds:
+    .!!!!
+    Success rate is 80 percent (4/5), round-trip min/avg/max = 64/66/68 ms
+    ----------------------------------------------------------------------
+    pc1> ping 1.1.1.1 -c 3
 
-- référez-vous [à la section NAT du mémo Cisco](../../cours/memo/memo_cisco.md#7-configuration-dun-nat-simple)
+    1.1.1.1 icmp_seq=1 timeout
+    84 bytes from 1.1.1.1 icmp_seq=2 ttl=62 time=32.227 ms
+    84 bytes from 1.1.1.1 icmp_seq=3 ttl=62 time=21.280 ms
+    ```
 
-🌞 **Test**
+#### **🌞 Configurez le NAT**
 
-- ajoutez une route par défaut (si c'est pas déjà fait)
-  - sur les VPCS
-  - sur la machine Linux
-- configurez l'utilisation d'un DNS
-  - sur les VPCS
-  - sur la machine Linux
-- vérifiez un `ping` vers un nom de domaine
+- **Référez-vous à la section NAT du mémo Cisco**
+    ```
+    # Configuration des interfaces en "interne" ou "externe"
+
+    # Interface vers le cloud
+    R1(config)#interface FastEthernet1/0
+    R1(config-if)#ip nat outside
+    R1(config-if)#exit
+    -------------------------------------
+    # Interface vers le switch
+    R1(config)#interface FastEthernet0/0
+    R1(config-if)#ip nat inside
+    R1(config-if)#exit
+    -------------------------------------------------
+    # Créer une liste où le trafic est autorisé
+    R1(config)#access-list 1 permit any
+    R1(config)#ip nat inside source list 1 interface fastEthernet 1/0 overload
+    -------------------------------------------------
+    # Activer la traduction des noms de domaines en adresses IP
+    R1(config)#ip domain lookup
+    R1(config)#do ping google.com
+
+    Translating "google.com"...domain server (192.168.1.1) [OK]
+
+    Type escape sequence to abort.
+    Sending 5, 100-byte ICMP Echos to 216.58.213.78, timeout is 2 seconds:
+    !!!!!
+    Success rate is 100 percent (5/5), round-trip min/avg/max = 24/108/164 ms
+    ```
+    
+#### **🌞 Test**
+
+- **Ajoutez une route par défaut (déjà fait pour moi)**
+	- **Sur les VPCS** => 
+	    - pc1 : `ip 10.1.1.1/24 10.1.1.254` 
+	    - pc2 : `ip 10.1.1.1/24 10.1.1.254` 
+	    - adm1: `ip 10.2.2.1/24 10.2.2.254`
+	- **Sur la machine Linux** => `GATEWAY=10.3.3.254` dans fichier de conf interface
+- **Configurez l'utilisation d'un DNS**
+	- **Sur les VPCS**
+    ```
+    pc1> ip dns 8.8.8.8
+    pc2> ip dns 8.8.8.8
+    adm1> ip dns 8.8.8.8
+
+    pc1> show ip
+
+    NAME        : pc1[1]
+    IP/MASK     : 10.1.1.1/24
+    GATEWAY     : 10.1.1.254
+    DNS         : 8.8.8.8
+    [...]
+
+    pc2> show ip
+
+    NAME        : pc2[1]
+    IP/MASK     : 10.1.1.2/24
+    GATEWAY     : 10.1.1.254
+    DNS         : 8.8.8.8
+    [...]
+
+    adm1> show ip
+
+    NAME        : adm1[1]
+    IP/MASK     : 10.2.2.1/24
+    GATEWAY     : 10.2.2.254
+    DNS         : 8.8.8.8
+    [...]
+    ```
+	- **Sur la machine Linux**
+    ```
+    [yrlan@web1 ~]$ sudo cat /etc/resolv.conf
+    # Generated by NetworkManager
+    search lan servers.tp4
+    nameserver 192.168.1.254
+    nameserver 8.8.8.8    
+    ```
+- **Vérifiez un `ping` vers un nom de domaine**
+    ```
+    [yrlan@web1 ~]$ ping google.com -c 4
+    PING google.com (172.217.18.206) 56(84) bytes of data.
+    64 bytes from ham02s14-in-f206.1e100.net (172.217.18.206): icmp_seq=1 ttl=113 time=47.1 ms
+    64 bytes from ham02s14-in-f206.1e100.net (172.217.18.206): icmp_seq=2 ttl=113 time=68.5 ms
+    64 bytes from ham02s14-in-f206.1e100.net (172.217.18.206): icmp_seq=3 ttl=113 time=50.1 ms
+    64 bytes from ham02s14-in-f206.1e100.net (172.217.18.206): icmp_seq=4 ttl=113 time=61.1 ms
+
+    --- google.com ping statistics ---
+    4 packets transmitted, 4 received, 0% packet loss, time 7114ms
+    rtt min/avg/max/mdev = 47.117/56.697/68.506/8.580 ms
+    -------------------------------------------------------------------------------------------
+    pc1> ping google.com -c 3
+    google.com resolved to 142.250.201.174
+
+    84 bytes from 142.250.201.174 icmp_seq=1 ttl=114 time=47.394 ms
+    84 bytes from 142.250.201.174 icmp_seq=2 ttl=114 time=113.020 ms
+    84 bytes from 142.250.201.174 icmp_seq=3 ttl=114 time=44.584 ms
+    -------------------------------------------------------------------------------------------
+    adm1> ping google.com -c 3
+    google.com resolved to 142.250.75.238
+
+    84 bytes from 142.250.75.238 icmp_seq=1 ttl=114 time=69.196 ms
+    84 bytes from 142.250.75.238 icmp_seq=2 ttl=114 time=57.925 ms
+    84 bytes from 142.250.75.238 icmp_seq=3 ttl=114 time=89.070 ms
+    ```
+    
+# V. Add a building
+
+On a acheté un nouveau bâtiment, faut tirer et configurer un nouveau switch jusque là-bas.
+
+On va en profiter pour setup un serveur DHCP pour les clients qui s'y trouvent.
+
+## 1. Topologie 5
+
+![Topo 5](./img/topo5.png)
+
+## 2. Adressage topologie 5
+
+Les réseaux et leurs VLANs associés :
+
+| Réseau    | Adresse       | VLAN associé |
+|-----------|---------------|--------------|
+| `clients` | `10.1.1.0/24` | 11           |
+| `servers` | `10.2.2.0/24` | 12           |
+| `routers` | `10.3.3.0/24` | 13           |
+
+L'adresse des machines au sein de ces réseaux :
+
+| Node                | `clients`       | `admins`        | `servers`       |
+|---------------------|-----------------|-----------------|-----------------|
+| `pc1.clients.tp4`   | `10.1.1.1/24`   | x               | x               |
+| `pc2.clients.tp4`   | `10.1.1.2/24`   | x               | x               |
+| `pc3.clients.tp4`   | DHCP            | x               | x               |
+| `pc4.clients.tp4`   | DHCP            | x               | x               |
+| `pc5.clients.tp4`   | DHCP            | x               | x               |
+| `dhcp1.clients.tp4` | `10.1.1.253/24` | x               | x               |
+| `adm1.admins.tp4`   | x               | `10.2.2.1/24`   | x               |
+| `web1.servers.tp4`  | x               | x               | `10.3.3.1/24`   |
+| `r1`                | `10.1.1.254/24` | `10.2.2.254/24` | `10.3.3.254/24` |
+
+## 3. Setup topologie 5
+
+Vous pouvez partir de la topologie 4. 
+
+#### **🌞 Vous devez me rendre le `show running-config` de tous les équipements**
+
+- **De tous les équipements réseau**
+  - **le routeur => [running_config_routeur](./conf/running_config_routeur.txt)**
+  - **les 3 switches =>**
+      - **[running_config_sw1](./conf/running_config_sw1.txt)**
+      - **[running_config_sw2](./conf/running_config_sw2.txt)**
+      - **[running_config_sw3](./conf/running_config_sw3.txt)**
+
+> N'oubliez pas les VLANs sur tous les switches.
+
+> **🖥️ VM `dhcp1.client1.tp4`**
+
+#### **🌞  Mettre en place un serveur DHCP dans le nouveau bâtiment**
+
+- il doit distribuer des IPs aux clients dans le réseau `clients` qui sont branchés au même switch que lui
+- sans aucune action manuelle, les clients doivent...
+  - avoir une IP dans le réseau `clients`
+  - avoir un accès au réseau `servers`
+  - avoir un accès WAN
+  - avoir de la résolution DNS
+  - 
+- **Configuration du serveur DHCP**
+    - **Hostname + config ip, passerelle et dns**
+
+> Réutiliser les serveurs DHCP qu'on a monté dans les autres TPs.
+
+```
+$ echo 'dhcp.clients.tp4' | sudo tee /etc/hostname
+dhcp.clients.tp4
+
+[yrlan@dhcp ~]$ sudo head -6 /etc/sysconfig/network-scripts/ifcfg-enp0s3
+TYPE=Ethernet
+BOOTPROTO=static
+IPADDR=10.1.1.253
+NETMASK=255.255.255.0
+GATEWAY=10.1.1.254
+DNS1=8.8.8.8
+```
+
+
+
+🌞  **Vérification**
+
+- un client récupère une IP en DHCP
+- il peut ping le serveur Web
+- il peut ping `8.8.8.8`
+- il peut ping `google.com`
+
+> Faites ça sur n'importe quel VPCS que vous venez d'ajouter : `pc3` ou `pc4` ou `pc5`.
+
+![i know cisco](./pics/i_know.jpeg)
+
