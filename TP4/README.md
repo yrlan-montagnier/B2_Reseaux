@@ -255,24 +255,24 @@ L'adresse des machines au sein de ces réseaux :
 
 - **Définissez les IPs statiques sur toutes les machines sauf le *routeur***
     ```
-    pc1> ip 10.1.1.1/24
+    pc1> ip 10.1.1.1/24 10.1.1.254
     Checking for duplicate address...
-    pc1 : 10.1.1.1 255.255.255.0
+    pc1 : 10.1.1.1 255.255.255.0 gateway 10.1.1.254
     ---------------------------------
-    pc2> ip 10.1.1.2/24
+    pc2> ip 10.1.1.2/24 10.1.1.254
     Checking for duplicate address...
-    pc2 : 10.1.1.2 255.255.255.0
+    pc2 : 10.1.1.2 255.255.255.0 gateway 10.1.1.254
     ---------------------------------
-    adm1> ip 10.2.2.1/24
+    adm1> ip 10.2.2.1/24 10.2.2.254
     Checking for duplicate address...
-    adm1 : 10.2.2.1 255.255.255.0
+    adm1 : 10.2.2.1 255.255.255.0 gateway 10.2.2.254
     ---------------------------------
-    [yrlan@web1 ~]$ sudo cat /etc/sysconfig/network-scripts/ifcfg-enp0s3
-    [...]
+    [yrlan@web1 ~]$ sudo head -5 /etc/sysconfig/network-scripts/ifcfg-enp0s3
+    TYPE=Ethernet
     BOOTPROTO=static
     IPADDR=10.3.3.1
-    NETMASK=255.255.255.0
-    [...]
+    NETMASK=255.255.255.0    
+    GATEWAY=10.3.3.254
     ```
 
 #### **🌞 Configuration des VLANs**
@@ -371,22 +371,22 @@ L'adresse des machines au sein de ces réseaux :
     - 3 sous-interfaces, chacune avec son IP et un VLAN associé
     ```
     R1#conf t
-
+    -------------------------------------------------
     R1(config)#interface fastEthernet 0/0.11
     R1(config-subif)#encapsulation dot1Q 11
     R1(config-subif)#ip addr 10.1.1.254 255.255.255.0 
     R1(config-subif)#exit
 
-    (config)#interface fastEthernet 0/0.12
+    R1(config)#interface fastEthernet 0/0.12
     R1(config-subif)#encapsulation dot1Q 12
     R1(config-subif)#ip addr 10.2.2.254 255.255.255.0 
     R1(config-subif)#exit
 
-    (config)#interface fastEthernet 0/0.13
+    R1(config)#interface fastEthernet 0/0.13
     R1(config-subif)#encapsulation dot1Q 13
     R1(config-subif)#ip addr 10.3.3.254 255.255.255.0 
     R1(config-subif)#exit
-
+    -------------------------------------------------
     # Allumer l'interface réseau
     R1(config)#interface FastEthernet0/0
     R1(config-if)#no shut
@@ -399,8 +399,10 @@ L'adresse des machines au sein de ces réseaux :
     FastEthernet0/0.11         10.1.1.254      YES NVRAM  up                    up
     FastEthernet0/0.12         10.2.2.254      YES NVRAM  up                    up
     FastEthernet0/0.13         10.3.3.254      YES NVRAM  up                    up
+    [...]
     
-    R1(config)#do copy running-config startup-config
+    # Sauvegarde config
+    R1(config)#do copy run sta
     ```
 
 #### **🌞 Vérif**
@@ -524,6 +526,8 @@ L'adresse des machines au sein de ces réseaux :
     R1(config-if)#no shut
     R1(config-if)#exit
     -------------------------------------
+    *Mar  1 00:38:55.831: %DHCP-6-ADDRESS_ASSIGN: Interface FastEthernet1/0 assigned DHCP address 10.0.3.16, mask 255.255.255.0, hostname R1
+    
     # Vérifications
     R1(config)#do show ip int br
     
@@ -663,7 +667,7 @@ On va en profiter pour setup un serveur DHCP pour les clients qui s'y trouvent.
 
 ## 1. Topologie 5
 
-![Topo 5](./img/topo5.png)
+![Topologie 5](./img/topo5.png)
 
 ## 2. Adressage topologie 5
 
@@ -708,41 +712,119 @@ Vous pouvez partir de la topologie 4.
 
 #### **🌞  Mettre en place un serveur DHCP dans le nouveau bâtiment**
 
-- il doit distribuer des IPs aux clients dans le réseau `clients` qui sont branchés au même switch que lui
-- sans aucune action manuelle, les clients doivent...
-  - avoir une IP dans le réseau `clients`
-  - avoir un accès au réseau `servers`
-  - avoir un accès WAN
-  - avoir de la résolution DNS
-  - 
-- **Configuration du serveur DHCP**
-    - **Hostname + config ip, passerelle et dns**
+- **Il doit distribuer des IPs aux clients dans le réseau `clients` qui sont branchés au même switch que lui**
+- **Sans aucune action manuelle, les clients doivent...**
+	- **Avoir une IP dans le réseau `clients`**
+	- **Avoir un accès au réseau `servers`**
+	- **Avoir un accès WAN**
+	- **Avoir de la résolution DNS**
+    ```
+    $ echo 'dhcp1.clients.tp4' | sudo tee /etc/hostname
+    dhcp1.clients.tp4
 
-> Réutiliser les serveurs DHCP qu'on a monté dans les autres TPs.
+    [yrlan@dhcp ~]$ sudo head -6 /etc/sysconfig/network-scripts/ifcfg-enp0s3
+    TYPE=Ethernet
+    BOOTPROTO=static
+    IPADDR=10.1.1.253
+    NETMASK=255.255.255.0
+    GATEWAY=10.1.1.254
+    DNS1=8.8.8.8
 
-```
-$ echo 'dhcp.clients.tp4' | sudo tee /etc/hostname
-dhcp.clients.tp4
+    [yrlan@dhcp1 ~]$ sudo cat /etc/dhcp/dhcpd.conf
+    # DHCP Server Configuration file.
+    #   see /usr/share/doc/dhcp-server/dhcpd.conf.example
+    #   see dhcpd.conf(5) man page
+    #
+    # Bail de 24H, max 48H
+    default-lease-time 86400;
+    max-lease-time 172800;
 
-[yrlan@dhcp ~]$ sudo head -6 /etc/sysconfig/network-scripts/ifcfg-enp0s3
-TYPE=Ethernet
-BOOTPROTO=static
-IPADDR=10.1.1.253
-NETMASK=255.255.255.0
-GATEWAY=10.1.1.254
-DNS1=8.8.8.8
-```
+    # Déclaration du réseau "clients" (10.1.1.0/24) + range
+    subnet 10.1.1.0 netmask 255.255.255.0 {
+        range                           10.1.1.20 10.1.1.100;
+        option domain-name-servers      8.8.8.8;
+        option routers                  10.1.1.254;
+    }
+    ```
 
+---
 
+#### **🌞  Vérification**
 
-🌞  **Vérification**
+- **Un client récupère une IP en DHCP**
+    ```
+    PC3> dhcp
+    DDORA IP 10.1.1.20/24 GW 10.1.1.254
 
-- un client récupère une IP en DHCP
-- il peut ping le serveur Web
-- il peut ping `8.8.8.8`
-- il peut ping `google.com`
+    PC3> show ip
+    NAME        : PC3[1]
+    IP/MASK     : 10.1.1.20/24
+    GATEWAY     : 10.1.1.254
+    DNS         : 8.8.8.8
+    DHCP SERVER : 10.1.1.253
+    DHCP LEASE  : 86391, 86400/43200/75600
+    MAC         : 00:50:79:66:68:05
+    LPORT       : 20030
+    RHOST:PORT  : 127.0.0.1:20031
+    MTU         : 1500
+    ---------------------------------------
+    PC4> dhcp
+    
+    DDORA IP 10.1.1.21/24 GW 10.1.1.254
+
+    PC4> show ip
+
+    NAME        : PC4[1]
+    IP/MASK     : 10.1.1.21/24
+    GATEWAY     : 10.1.1.254
+    DNS         : 8.8.8.8
+    DHCP SERVER : 10.1.1.253
+    DHCP LEASE  : 86274, 86400/43200/75600
+    MAC         : 00:50:79:66:68:03
+    LPORT       : 20032
+    RHOST:PORT  : 127.0.0.1:20033
+    MTU         : 1500
+    ---------------------------------------
+    PC5> dhcp
+    DDORA IP 10.1.1.22/24 GW 10.1.1.254
+    
+    PC5> show ip
+
+    NAME        : PC5[1]
+    IP/MASK     : 10.1.1.22/24
+    GATEWAY     : 10.1.1.254
+    DNS         : 8.8.8.8
+    DHCP SERVER : 10.1.1.253
+    DHCP LEASE  : 86271, 86400/43200/75600
+    MAC         : 00:50:79:66:68:00
+    LPORT       : 20034
+    RHOST:PORT  : 127.0.0.1:20035
+    MTU         : 1500
+    ```
+- **Il peut ping le serveur Web**
+    ```
+    PC3> ping 10.3.3.1 -c 3
+
+    84 bytes from 10.3.3.1 icmp_seq=1 ttl=63 time=108.602 ms
+    84 bytes from 10.3.3.1 icmp_seq=2 ttl=63 time=97.520 ms
+    84 bytes from 10.3.3.1 icmp_seq=3 ttl=63 time=120.619 ms
+    ```
+- **Il peut ping `8.8.8.8`**
+    ```
+    PC3> ping 8.8.8.8 -c 3
+
+    8.8.8.8 icmp_seq=1 timeout
+    8.8.8.8 icmp_seq=2 timeout
+    84 bytes from 8.8.8.8 icmp_seq=3 ttl=112 time=77.885 ms
+    ```
+- **Il peut ping `google.com`**
+    ```
+    PC3> ping google.com -c 3
+    google.com resolved to 216.58.214.78
+
+    84 bytes from 216.58.214.78 icmp_seq=1 ttl=112 time=71.263 ms
+    84 bytes from 216.58.214.78 icmp_seq=2 ttl=112 time=70.416 ms
+    84 bytes from 216.58.214.78 icmp_seq=3 ttl=112 time=81.165 ms
+    ```
 
 > Faites ça sur n'importe quel VPCS que vous venez d'ajouter : `pc3` ou `pc4` ou `pc5`.
-
-![i know cisco](./pics/i_know.jpeg)
-
