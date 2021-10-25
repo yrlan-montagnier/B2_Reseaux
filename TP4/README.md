@@ -29,6 +29,8 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
 
 # **0. Prérequis**
 
+## **Checklist VM Linux**
+
 A chaque machine déployée, vous **DEVREZ** vérifier la 📝**checklist**📝 :
 
 - [x] IP locale, statique ou dynamique
@@ -743,11 +745,12 @@ Vous pouvez partir de la topologie 4.
 #### **🌞 Vous devez me rendre le `show running-config` de tous les équipements**
 
 - **De tous les équipements réseau**
-  - **le routeur => [running_config_routeur](./conf/running_config_routeur.txt)**
-  - **les 3 switches =>**
-      - **[running_config_sw1](./conf/running_config_sw1.txt)**
-      - **[running_config_sw2](./conf/running_config_sw2.txt)**
-      - **[running_config_sw3](./conf/running_config_sw3.txt)**
+    - **Le routeur => [running_config_routeur](./conf/running_config_routeur.txt)**
+    - **Les 3 switches =>**
+        - **[running_config_sw1](./conf/running_config_sw1.txt)**
+        - **[running_config_sw2](./conf/running_config_sw2.txt)**
+        - **[running_config_sw3](./conf/running_config_sw3.txt)**
+    - **La conf dhcp => [dhcpd.conf](./conf/dhcpd.conf)**
 
 > N'oubliez pas les VLANs sur tous les switches.
 
@@ -790,7 +793,7 @@ Vous pouvez partir de la topologie 4.
     }
     ```
 
-> **  Fichier [dhcpd.conf](./conf/dhcpd.conf)**
+> **Fichier [dhcpd.conf](./conf/dhcpd.conf)**
 
 ---
 
@@ -872,4 +875,4 @@ Vous pouvez partir de la topologie 4.
     84 bytes from 216.58.214.78 icmp_seq=3 ttl=112 time=81.165 ms
     ```
 
-> Faites ça sur n'importe quel VPCS que vous venez d'ajouter : `pc3` ou `pc4` ou `pc5`.
+> **Faites ça sur n'importe quel VPCS que vous venez d'ajouter : `pc3` ou `pc4` ou `pc5`.**
