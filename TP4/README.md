@@ -27,22 +27,32 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
   - [2. Adressage topologie 4](#2-adressage-topologie-5)
   - [3. Setup topologie 5](#3-setup-topologie-5)
 
+# **0. Prérequis**
 
+A chaque machine déployée, vous **DEVREZ** vérifier la 📝**checklist**📝 :
 
-# I. Dumb switch
+- [x] IP locale, statique ou dynamique
+- [x] hostname défini
+- [x] firewall actif, qui ne laisse passer que le strict nécessaire
+- [x] on force une host-only, juste pour pouvoir SSH
+- [x] SSH fonctionnel
+- [x] résolution de nom
+  - vers internet, quand vous aurez le routeur en place
 
-## 1. Topologie 1
+# **I. Dumb switch**
+
+## **1. Topologie 1**
 
 ![Topologie 1](./img/topo1.png)
 
-## 2. Adressage topologie 1
+## **2. Adressage topologie 1**
 
 | Node  | IP            |
 |-------|---------------|
 | `pc1` | `10.1.1.1/24` |
 | `pc2` | `10.1.1.2/24` |
 
-## 3. Setup topologie 1
+## **3. Setup topologie 1**
 
 #### **🌞 Commençons simple**
 - **Définissez les IPs statiques sur les deux VPCS**
@@ -70,13 +80,12 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     RHOST:PORT  : 127.0.0.1:20007
     MTU         : 1500
     ```
-- `ping` un VPCS depuis l'autre
+- **`ping` un VPCS depuis l'autre**
     ```
-    PC1> ping 10.1.1.2 -c 3
+    PC1> ping 10.1.1.2 -c 2
 
     84 bytes from 10.1.1.2 icmp_seq=1 ttl=64 time=5.545 ms
     84 bytes from 10.1.1.2 icmp_seq=2 ttl=64 time=8.601 ms
-    84 bytes from 10.1.1.2 icmp_seq=3 ttl=64 time=6.452 ms
     -------------------------------------------------------
     PC2> ping 10.1.1.1 -c 2
 
@@ -87,6 +96,17 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
 > Jusque là, ça devrait aller. Noter qu'on a fait aucune conf sur le switch. Tant qu'on ne fait rien, c'est une bête multiprise.
 
 # II. VLAN
+
+**Le but dans cette partie va être de tester un peu les VLANs.**
+On va rajouter un **troisième client** qui, bien que dans le même réseau, **sera isolé des autres grâce aux VLANs**.
+**Les VLANs sont une configuration à effectuer sur les switches.** C'est les switches qui effectuent le blocage.
+Le principe est simple :
+
+- **Déclaration du VLAN sur tous les switches**
+    - Un VLAN a forcément un ID (un entier)
+    - Bonne pratique, on lui met un nom
+- **Sur chaque switch, on définit le VLAN associé à chaque port**
+    - Genre "sur le port 35, c'est un client du VLAN 20 qui est branché"
 
 ## 1. Topologie 2
 
@@ -151,11 +171,11 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     ---------------------------------------------
     # Création des 2 vlan + leurs nom
     Switch(config)#vlan 10  
-    Switch(config-vlan)#name MyVlan
+    Switch(config-vlan)#name authorised
     Switch(config-vlan)#exit
     ----------------------------------
     Switch(config)#vlan 20
-    Switch(config-vlan)#name restrict
+    Switch(config-vlan)#name restricted  
     Switch(config-vlan)#exit
     ---------------------------------------------
     # Vérifications
@@ -164,8 +184,8 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     VLAN Name                             Status    Ports
     ---- -------------------------------- --------- -------------------------------
     [...]
-    10   MyVlan                           active    
-    20   restrict                         active    
+    10   authorised                           active    
+    20   restricted                           active    
     [...]
     ```
 - **Ajout des ports du switches dans le bon VLAN (voir [le tableau d'adressage de la topo 2 juste au dessus](#2-adressage-topologie-2))**
@@ -195,8 +215,8 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     VLAN Name                             Status    Ports
     ---- -------------------------------- --------- -------------------------------
     [...]
-    10   MyVlan                           active    Gi0/1, Gi0/2
-    20   restrict                         active    Gi0/3
+    10   authorised                           active    Gi0/1, Gi0/2
+    20   restricted                           active    Gi0/3
     [...]
     ```
 
@@ -223,6 +243,17 @@ On va utiliser GNS3 dans ce TP pour se rapprocher d'un cas réel. On va focus su
     
 # III. Routing
 
+Dans cette partie, on va donner un peu de sens aux VLANs :
+
+- **Un pour les serveurs du réseau**
+    - **On simulera ça avec un p'tit serveur web**
+- **Un pour les admins du réseau**
+- **Un pour les autres random clients du réseau**
+
+Cela dit, il faut que tout ce beau monde puisse se ping, au moins joindre le réseau des serveurs, pour accéder au super site-web.
+Bien que bloqué au niveau du switch à cause des VLANs, le trafic pourra passer d'un VLAN à l'autre grâce à un routeur.
+Il assurera son job de routeur traditionnel : router entre deux réseaux. Sauf qu'en plus, il gérera le changement de VLAN à la volée.
+
 ## 1. Topologie 3
 
 ![Topologie 3](./img/topo3.png)
@@ -234,12 +265,12 @@ Les réseaux et leurs VLANs associés :
 | Réseau    | Adresse       | VLAN associé |
 |-----------|---------------|--------------|
 | `clients` | `10.1.1.0/24` | 11           |
-| `servers` | `10.2.2.0/24` | 12           |
-| `routers` | `10.3.3.0/24` | 13           |
+| `admins`  | `10.2.2.0/24` | 12           |
+| `servers` | `10.3.3.0/24` | 13           |
 
 L'adresse des machines au sein de ces réseaux :
 
-| Node               | `clients`       | `admins`        | `servers`       |
+| Node               | `clients`       | `admins `       | `servers`       |
 |--------------------|-----------------|-----------------|-----------------|
 | `pc1.clients.tp4`  | `10.1.1.1/24`   | x               | x               |
 | `pc2.clients.tp4`  | `10.1.1.2/24`   | x               | x               |
@@ -435,7 +466,8 @@ L'adresse des machines au sein de ces réseaux :
     pc1> ip 10.1.1.1/24 10.1.1.254
     Checking for duplicate address...
     pc1 : 10.1.1.1 255.255.255.0 gateway 10.1.1.254
-
+    
+    
     pc2> ip 10.1.1.2/24 10.1.1.254
     Checking for duplicate address...
     pc1 : 10.1.1.2 255.255.255.0 gateway 10.1.1.254
@@ -444,21 +476,32 @@ L'adresse des machines au sein de ces réseaux :
     Checking for duplicate address...
     adm1 : 10.2.2.1 255.255.255.0 gateway 10.2.2.254
     
+    # Vérification 
+    PC1> show ip
+
+    NAME        : PC1[1]
+    IP/MASK     : 10.1.1.1/24
+    GATEWAY     : 10.1.1.254
+    DNS         : 8.8.8.8
+    [...]
+    
     # Sur tous VPC's pour save la config :
     VPC's> wr
     Saving startup configuration to startup.vpc
     .  done
     ```
 	- **Ajoutez une route par défaut sur la machine virtuelle**
-    ```
+    ```bash
     [yrlan@web1 ~]$ sudo cat /etc/sysconfig/network-scripts/ifcfg-enp0s3 | grep GATEWAY
     GATEWAY=10.3.3.254
+    
+    # Vérif
     [yrlan@web1 ~]$ ip r s | grep default
     default via 10.3.3.254 dev enp0s3 proto static metric 100
     ```
 	- **Testez des `ping` entre les réseaux**
 
-    > **La 1ère fois, il y'a eut un timeout pour le 1er ping, car la machine fais un ARP broadcast pour connaitre la mac de destination, souvent, le temps qu'elle obtienne la réponse est trop long donc le 1er ping affiche un timeout**
+    > **La 1ère fois, il y'a souvent des timeout pour le 1er ping, car la machine fais un ARP broadcast pour connaitre la mac de destination, souvent, le temps qu'elle obtienne la réponse est trop long donc le 1er ping voir desfois le 2ème affiche un timeout**
     ```
     pc1> ping 10.2.2.1 -c 3
 
@@ -499,8 +542,8 @@ Les réseaux et leurs VLANs associés :
 | Réseau    | Adresse       | VLAN associé |
 |-----------|---------------|--------------|
 | `clients` | `10.1.1.0/24` | 11           |
-| `servers` | `10.2.2.0/24` | 12           |
-| `routers` | `10.3.3.0/24` | 13           |
+| `admins`  | `10.2.2.0/24` | 12           |
+| `servers` | `10.3.3.0/24` | 13           |
 
 L'adresse des machines au sein de ces réseaux :
 
@@ -676,8 +719,8 @@ Les réseaux et leurs VLANs associés :
 | Réseau    | Adresse       | VLAN associé |
 |-----------|---------------|--------------|
 | `clients` | `10.1.1.0/24` | 11           |
-| `servers` | `10.2.2.0/24` | 12           |
-| `routers` | `10.3.3.0/24` | 13           |
+| `admins`  | `10.2.2.0/24` | 12           |
+| `servers` | `10.3.3.0/24` | 13           |
 
 L'adresse des machines au sein de ces réseaux :
 
@@ -722,7 +765,7 @@ Vous pouvez partir de la topologie 4.
     $ echo 'dhcp1.clients.tp4' | sudo tee /etc/hostname
     dhcp1.clients.tp4
 
-    [yrlan@dhcp ~]$ sudo head -6 /etc/sysconfig/network-scripts/ifcfg-enp0s3
+    [yrlan@dhcp1 ~]$ sudo head -6 /etc/sysconfig/network-scripts/ifcfg-enp0s3
     TYPE=Ethernet
     BOOTPROTO=static
     IPADDR=10.1.1.253
@@ -746,6 +789,8 @@ Vous pouvez partir de la topologie 4.
         option routers                  10.1.1.254;
     }
     ```
+
+> **  Fichier [dhcpd.conf](./conf/dhcpd.conf)**
 
 ---
 
