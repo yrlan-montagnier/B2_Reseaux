@@ -1,5 +1,27 @@
 # Compte rendu TP1 - MONTAGNIER Yrlan
 
+# Sommaire
+- [Sommaire](#sommaire)
+- [I. Exploration locale en solo](#i-exploration-locale-en-solo)
+  - [1. Affichage d'informations sur la pile TCP/IP locale](#1-affichage-dinformations-sur-la-pile-tcpip-locale)
+  - [2. Modifications des informations](#2-modifications-des-informations)
+    - [A. Modification d'adresse IP (part 1)](#a-modification-dadresse-ip-part-1)
+    - [B. Table ARP](#b-table-arp)
+    - [C. `nmap`](#c-nmap)
+    - [D. Modification d'adresse IP (part 2)](#d-modification-dadresse-ip-part-2)
+- [II. Exploration locale en duo](#ii-exploration-locale-en-duo)
+  - [1. Prérequis](#1-prérequis)
+  - [2. Câblage](#2-câblage)
+  - [3. Modification d'adresse IP](#3-modification-dadresse-ip)
+  - [4. Utilisation d'un des deux comme gateway](#4-utilisation-dun-des-deux-comme-gateway)
+  - [5. Petit chat privé](#5-petit-chat-privé)
+  - [6. Firewall](#6-firewall)
+- [III. Manipulations d'autres outils/protocoles côté client](#iii-manipulations-dautres-outilsprotocoles-côté-client)
+  - [1. DHCP](#1-dhcp)
+  - [2. DNS](#2-dns)
+- [IV. Wireshark](#iv-wireshark)
+
+
 ## I. Exploration locale en solo
 ### 1. Affichage d'informations sur la pile TCP/IP locale
 #### **🌞 Affichez les infos des cartes réseau de votre PC**
