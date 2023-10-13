@@ -1,0 +1,17 @@
+$TTL    604800
+@   IN  SOA     dns1.tp4.lab. root.tp4.lab. (
+                                                1001    ;Serial
+                                                3H      ;Refresh
+                                                15M     ;Retry
+                                                1W      ;Expire
+                                                1D      ;Minimum TTL
+                                                )
+
+;Name Server Information
+@      IN  NS      dns1.tp4.lab.
+
+dns1 IN  A             10.2.20.251
+PC1        IN  A       10.2.10.1
+PC2        IN  A       10.2.30.1
+PC3        IN  A       10.254.0.1
+dhcp       IN  A       10.2.20.253
